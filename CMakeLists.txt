@@ -20,7 +20,7 @@ ExternalProject_Add(nyoci
   UPDATE_COMMAND ""
 )
 ExternalProject_Get_Property(nyoci install_dir)
-set (libnyoci ${install_dir}/lib/libnyoci.so)
+set (libnyoci ${install_dir}/lib/libnyoci.a)
 include_directories (${install_dir}/include)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
