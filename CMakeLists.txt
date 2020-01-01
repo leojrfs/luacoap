@@ -12,6 +12,7 @@ set (luacoap_VERSION_PATCH 0)
 
 ExternalProject_Add(nyoci
   GIT_REPOSITORY https://github.com/darconeous/libnyoci
+  GIT_TAG 11a6e1b107cb1577cb0fffca7e3fd261f26da94a
   SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/nyoci
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
   CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/nyoci/bootstrap.sh &&
@@ -29,11 +30,11 @@ find_package(Lua ${LUA_VERSION} REQUIRED)
 include_directories (${LUA_INCLUDE_DIR})
 
 find_package(Threads REQUIRED)
-find_package(OpenSSL REQUIRED) 
+find_package(OpenSSL REQUIRED)
 
 
 ## Source files
-aux_source_directory (src src_files) 
+aux_source_directory (src src_files)
 
 include_directories (include)
 add_library (coap SHARED ${src_files})
