@@ -3,29 +3,34 @@ project (luacoap C)
 
 include (ExternalProject)
 
+set(LUA_VERSION "5.1" CACHE STRING "Version of Lua interpreter to link and install luaCoap to (-DLUA_VERSION)")
+message(STATUS "Build and install for Lua version ${LUA_VERSION}")
+
 set (luacoap_VERSION_MAJOR 0)
 set (luacoap_VERSION_MINOR 1)
 set (luacoap_VERSION_PATCH 0)
 
-ExternalProject_Add(smcp
-  GIT_REPOSITORY https://github.com/darconeous/smcp
-  GIT_TAG "0.6.5"
-  SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/smcp
+ExternalProject_Add(nyoci
+  GIT_REPOSITORY https://github.com/darconeous/libnyoci
+  SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/nyoci
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-  CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/smcp/bootstrap.sh &&
-  ${CMAKE_CURRENT_BINARY_DIR}/smcp/configure --prefix=<INSTALL_DIR>
+  CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/nyoci/bootstrap.sh &&
+  ${CMAKE_CURRENT_BINARY_DIR}/nyoci/configure --enable-tls --disable-nyocictl --prefix=<INSTALL_DIR>
   BUILD_COMMAND ${MAKE}
   UPDATE_COMMAND ""
 )
-ExternalProject_Get_Property(smcp install_dir)
-set (libsmcp ${install_dir}/lib/libsmcp.so)
+ExternalProject_Get_Property(nyoci install_dir)
+set (libnyoci ${install_dir}/lib/libnyoci.so)
 include_directories (${install_dir}/include)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
-find_package (Lua 5.3 REQUIRED)
+
+find_package(Lua ${LUA_VERSION} REQUIRED)
 include_directories (${LUA_INCLUDE_DIR})
 
-find_package (Threads REQUIRED)
+find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED) 
+
 
 ## Source files
 aux_source_directory (src src_files) 
@@ -36,10 +41,10 @@ set_target_properties (coap PROPERTIES PREFIX "")
 set_target_properties (coap PROPERTIES CMAKE_POSITION_INDEPENDENT_CODE True)
 
 set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
-target_link_libraries (coap ${libsmcp} ${LUA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-add_dependencies (coap smcp)
+target_link_libraries (coap ${libnyoci} ${OPENSSL_SSL_LIBRARY} ${LUA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_dependencies (coap nyoci)
 
-install (FILES ${CMAKE_BINARY_DIR}/coap.so DESTINATION lib/lua/5.3)
+install (FILES ${CMAKE_BINARY_DIR}/coap.so DESTINATION lib/lua/${LUA_VERSION})
 
 set (CPACK_GENERATOR "DEB")
 set (CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME})
