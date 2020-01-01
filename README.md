@@ -9,7 +9,7 @@ implements some client calls.
 To build this project, you require to install cmake and lua
 
 ```bash
-git clone https://github.com/alfonsoros88/luacoap
+git clone https://github.com/vwout/luacoap
 mkdir -p luacoap/build
 cd luacoap/build
 cmake ..
@@ -27,7 +27,7 @@ sudo make install
 and you can use it independently of your location.
 
 Optionally, you can download and install the [debian 
-package](https://github.com/alfonsoros88/luacoap/raw/master/downloads/luacoap-0.0.1%7Ealpha1-Linux.deb).
+package](https://github.com/vwout/luacoap/raw/master/downloads/luacoap-0.2.0-Linux.deb).
 
 or `luarocks`
 

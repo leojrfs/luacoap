@@ -7,7 +7,7 @@ set(LUA_VERSION "5.1" CACHE STRING "Version of Lua interpreter to link and insta
 message(STATUS "Build and install for Lua version ${LUA_VERSION}")
 
 set (luacoap_VERSION_MAJOR 0)
-set (luacoap_VERSION_MINOR 1)
+set (luacoap_VERSION_MINOR 2)
 set (luacoap_VERSION_PATCH 0)
 
 ExternalProject_Add(nyoci
@@ -50,8 +50,8 @@ set (CPACK_GENERATOR "DEB")
 set (CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME})
 set (CPACK_SET_DESTDIR TRUE)
 set (CPACK_DEBIAN_PACKAGE_MAINTAINER "Alfonso Ros")
-set (CPACK_PACKAGE_VERSION_MAJOR "0")
-set (CPACK_PACKAGE_VERSION_MINOR "1")
-set (CPACK_PACKAGE_VERSION_PATCH "0")
+set (CPACK_PACKAGE_VERSION_MAJOR ${luacoap_VERSION_MAJOR})
+set (CPACK_PACKAGE_VERSION_MINOR ${luacoap_VERSION_MINOR})
+set (CPACK_PACKAGE_VERSION_PATCH ${luacoap_VERSION_PATCH})
 set (CPACK_OUTPUT_FILE_PREFIX "${CMAKE_SOURCE_DIR}/downloads")
 include (CPack)
