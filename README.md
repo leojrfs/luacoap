@@ -1,7 +1,7 @@
 # luacoap
 
 This project is a simple lua binding to the 
-[SMCP](https://github.com/darconeous/smcp) CoAP stack. The current version only 
+[Nyoci](https://github.com/darconeous/libnyoci) CoAP stack. The current version only 
 implements some client calls.
 
 ### Building

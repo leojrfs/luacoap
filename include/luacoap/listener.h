@@ -7,7 +7,7 @@
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-#include <smcp/smcp.h>
+#include <libnyoci/libnyoci.h>
 
 #include <luacoap/client.h>
 #include <luacoap/luaclient.h>
@@ -19,17 +19,17 @@
  *  Listener Structure
  */
 typedef struct {
-  // smcp stuff
-  smcp_t smcp;                           /**< CoAP client reference */
-  request_s request;                     /**< CoAP request structure */
-  struct smcp_transaction_s transaction; /**< SMCP transaction structure */
+  // nyoci stuff
+  nyoci_t nyoci;                          /**< CoAP client reference */
+  request_s request;                      /**< CoAP request structure */
+  struct nyoci_transaction_s transaction; /**< Nyoci transaction structure */
 
   // Callback 
   int lua_func_ref;                      /**< Reference to the lua callback function */
   lua_State* L;                          /**< Lua state with the callback function */
 
   // Thread Control
-  pthread_t thread;                      /**< SMCP process thread */
+  pthread_t thread;                      /**< Nyoci process thread */
   pthread_mutex_t suspend_mutex;         /**< Mutex to access the thread status */
   int suspend;                           /**< Suspend thread flag */
   int stop;                              /**< Stop thread flag */
@@ -46,7 +46,7 @@ void register_listener_table(lua_State* L);
 /**
  *  Create a Lua table Listener
  */
-lcoap_listener_t lua_create_listener(lua_State* L, smcp_t smcp, int func_ref);
+lcoap_listener_t lua_create_listener(lua_State* L, nyoci_t nyoci, int func_ref);
 
 /**
  * Executes the callback in the referenced lua state.

@@ -9,8 +9,8 @@ static void signal_interrupt(int sig) {
 }
 
 
-static smcp_status_t resend_get_request(void* context);
-static smcp_status_t get_response_handler(int statuscode, void* context);
+static nyoci_status_t resend_get_request(void* context);
+static nyoci_status_t get_response_handler(int statuscode, void* context);
 
 request_t create_request(request_t request, coap_code_t method, int get_tt,
                          const char* url, coap_content_type_t ct,
@@ -32,119 +32,119 @@ request_t create_request(request_t request, coap_code_t method, int get_tt,
   return request;
 }
 
-int send_request(smcp_t smcp, request_t request) {
+int send_request(nyoci_t nyoci, request_t request) {
   gRet = ERRORCODE_INPROGRESS;
   observe = false;
 
-  smcp_status_t status = 0;
-  struct smcp_transaction_s transaction;
+  nyoci_status_t status = 0;
+  struct nyoci_transaction_s transaction;
   previous_sigint_handler = signal(SIGINT, &signal_interrupt);
 
-  int flags = SMCP_TRANSACTION_ALWAYS_INVALIDATE;
+  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE;
 
-  smcp_transaction_end(smcp, &transaction);
-  smcp_transaction_init(&transaction, flags, (void*)&resend_get_request,
+  nyoci_transaction_end(nyoci, &transaction);
+  nyoci_transaction_init(&transaction, flags, (void*)&resend_get_request,
                         (void*)&get_response_handler, request);
 
-  status = smcp_transaction_begin(smcp, &transaction, 30 * MSEC_PER_SEC);
+  status = nyoci_transaction_begin(nyoci, &transaction, 30 * MSEC_PER_SEC);
 
   if (status) {
-    fprintf(stderr, "smcp_begin_transaction_old() returned %d(%s).\n", status,
-            smcp_status_to_cstr(status));
+    fprintf(stderr, "nyoci_begin_transaction_old() returned %d(%s).\n", status,
+            nyoci_status_to_cstr(status));
     return false;
   }
 
   while (ERRORCODE_INPROGRESS == gRet) {
-    smcp_wait(smcp, 1000);
-    smcp_process(smcp);
+    nyoci_plat_wait(nyoci, 1000);
+    nyoci_plat_process(nyoci);
   }
 
-  smcp_transaction_end(smcp, &transaction);
+  nyoci_transaction_end(nyoci, &transaction);
   signal(SIGINT, previous_sigint_handler);
   return gRet;
 }
 
-int settup_observe_request(smcp_t smcp, request_t request,
-                           smcp_transaction_t t) {
+int settup_observe_request(nyoci_t nyoci, request_t request,
+                           nyoci_transaction_t t) {
   gRet = ERRORCODE_INPROGRESS;
   observe = true;
 
-  int flags = SMCP_TRANSACTION_ALWAYS_INVALIDATE | SMCP_TRANSACTION_OBSERVE;
+  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE | NYOCI_TRANSACTION_OBSERVE;
 
-  smcp_transaction_end(smcp, t);
-  smcp_transaction_init(t, flags, (void*)&resend_get_request,
+  nyoci_transaction_end(nyoci, t);
+  nyoci_transaction_init(t, flags, (void*)&resend_get_request,
                         (void*)&get_response_handler, request);
 
   return 0;
 }
 
-static smcp_status_t resend_get_request(void* context) {
+static nyoci_status_t resend_get_request(void* context) {
   request_s* request = (request_s*)context;
-  smcp_status_t status = 0;
+  nyoci_status_t status = 0;
 
-  status = smcp_outbound_begin(smcp_get_current_instance(),
+  status = nyoci_outbound_begin(nyoci_get_current_instance(),
                                request->outbound_code, request->outbound_tt);
   require_noerr(status, bail);
 
-  status = smcp_outbound_set_uri(request->url, 0);
+  status = nyoci_outbound_set_uri(request->url, 0);
   require_noerr(status, bail);
 
   if (request->content) {
     status =
-        smcp_outbound_add_option_uint(COAP_OPTION_CONTENT_TYPE, request->ct);
+        nyoci_outbound_add_option_uint(COAP_OPTION_CONTENT_TYPE, request->ct);
     require_noerr(status, bail);
 
     status =
-        smcp_outbound_append_content(request->content, request->content_len);
+        nyoci_outbound_append_content(request->content, request->content_len);
     require_noerr(status, bail);
   }
 
-  status = smcp_outbound_send();
+  status = nyoci_outbound_send();
 
   if (status) {
-    fprintf(stderr, "smcp_outbound_send() returned error %d(%s).\n", status,
-            smcp_status_to_cstr(status));
+    fprintf(stderr, "nyoci_outbound_send() returned error %d(%s).\n", status,
+            nyoci_status_to_cstr(status));
   }
 bail:
   return status;
 }
 
-static smcp_status_t get_response_handler(int statuscode, void* context) {
-  const char* content = smcp_inbound_get_content_ptr();
-  coap_size_t content_length = smcp_inbound_get_content_len();
+static nyoci_status_t get_response_handler(int statuscode, void* context) {
+  const char* content = nyoci_inbound_get_content_ptr();
+  coap_size_t content_length = nyoci_inbound_get_content_len();
 
   if (statuscode >= 0) {
-    if (content_length > (smcp_inbound_get_packet_length() - 4)) {
+    if (content_length > (nyoci_inbound_get_packet_length() - 4)) {
       fprintf(stderr,
               "INTERNAL ERROR: CONTENT_LENGTH LARGER THAN "
               "PACKET_LENGTH-4!(content_length=%u, packet_length=%u)\n",
-              content_length, smcp_inbound_get_packet_length());
+              content_length, nyoci_inbound_get_packet_length());
       gRet = ERRORCODE_UNKNOWN;
       goto bail;
     }
 
-    if (!coap_verify_packet((void*)smcp_inbound_get_packet(),
-                            smcp_inbound_get_packet_length())) {
+    if (!coap_verify_packet((void*)nyoci_inbound_get_packet(),
+                            nyoci_inbound_get_packet_length())) {
       fprintf(stderr, "INTERNAL ERROR: CALLBACK GIVEN INVALID PACKET!\n");
       gRet = ERRORCODE_UNKNOWN;
       goto bail;
     }
   }
 
-  if (statuscode == SMCP_STATUS_TRANSACTION_INVALIDATED) {
+  if (statuscode == NYOCI_STATUS_TRANSACTION_INVALIDATED) {
     gRet = 0;
   }
 
   if (((statuscode < COAP_RESULT_200) || (statuscode >= COAP_RESULT_400)) &&
-      (statuscode != SMCP_STATUS_TRANSACTION_INVALIDATED) &&
+      (statuscode != NYOCI_STATUS_TRANSACTION_INVALIDATED) &&
       (statuscode != HTTP_TO_COAP_CODE(HTTP_RESULT_CODE_PARTIAL_CONTENT))) {
-    if (observe && statuscode == SMCP_STATUS_TIMEOUT) {
+    if (observe && statuscode == NYOCI_STATUS_TIMEOUT) {
       gRet = 0;
     } else {
-      gRet = (statuscode == SMCP_STATUS_TIMEOUT) ? ERRORCODE_TIMEOUT
+      gRet = (statuscode == NYOCI_STATUS_TIMEOUT) ? ERRORCODE_TIMEOUT
                                                  : ERRORCODE_COAP_ERROR;
       fprintf(stderr, "get: Result code = %d (%s)\n", statuscode,
-              (statuscode < 0) ? smcp_status_to_cstr(statuscode)
+              (statuscode < 0) ? nyoci_status_to_cstr(statuscode)
                                : coap_code_to_cstr(statuscode));
     }
   }
@@ -155,7 +155,7 @@ static smcp_status_t get_response_handler(int statuscode, void* context) {
     coap_size_t value_len;
     bool last_block = true;
 
-    while ((key = smcp_inbound_next_option(&value, &value_len)) !=
+    while ((key = nyoci_inbound_next_option(&value, &value_len)) !=
            COAP_OPTION_INVALID) {
       if (key == COAP_OPTION_BLOCK2) {
         last_block = !(value[value_len - 1] & (1 << 3));
@@ -174,5 +174,5 @@ static smcp_status_t get_response_handler(int statuscode, void* context) {
   }
 
 bail:
-  return SMCP_STATUS_OK;
+  return NYOCI_STATUS_OK;
 }

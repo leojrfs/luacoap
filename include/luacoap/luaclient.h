@@ -5,15 +5,15 @@
 #include <lua.h>
 #include <lualib.h>
 
-#include <smcp/smcp.h>
+#include <libnyoci/libnyoci.h>
 #include <luacoap/listener.h>
 #include <luacoap/client.h>
 
 #define CLIENT_MT_NAME "coap_client"
 #define COAP_METHOD_OBSERVE 5
 
-// Just keeps the smcp client
-typedef struct { smcp_t smcp; } lcoap_client;
+// Just keeps the nyoci client
+typedef struct { nyoci_t nyoci; } lcoap_client;
 
 /**
  *  Register the CoAP client table.

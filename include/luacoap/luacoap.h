@@ -8,7 +8,7 @@
 #include <luacoap/client.h>
 #include <luacoap/luaclient.h>
 #include <luacoap/listener.h>
-#include <smcp/smcp.h>
+#include <libnyoci/libnyoci.h>
 
 #define COAP_METHOD_OBSERVE 5
 

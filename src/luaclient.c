@@ -36,7 +36,14 @@ static const struct luaL_Reg luacoap_client_map[] = {
 
 void register_client_table(lua_State *L) {
   luaL_newmetatable(L, CLIENT_MT_NAME);
-  luaL_setfuncs(L, luacoap_client_map, 0);
+
+  #if LUA_VERSION_NUM == 501
+  lua_setglobal(L, CLIENT_MT_NAME);                      // for Lua 5.1
+  luaL_register(L, CLIENT_MT_NAME, luacoap_client_map);  // for Lua 5.1
+  #else
+  luaL_setfuncs(L, luacoap_client_map, 0);               // for Lua 5.2 and above
+  #endif
+
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
 }
@@ -99,14 +106,14 @@ static int coap_client_send_request(coap_code_t method, lua_State *L) {
   int func_ref = lua_isfunction(L, -1) ? luaL_ref(L, LUA_REGISTRYINDEX) : 0;
 
   if (method == COAP_METHOD_OBSERVE) {
-    lcoap_listener_t ltnr = lua_create_listener(L, cud->smcp, func_ref);
+    lcoap_listener_t ltnr = lua_create_listener(L, cud->nyoci, func_ref);
 
     // Create the CoAP request
     create_request(&ltnr->request, COAP_METHOD_GET, tt, url, ct, payload,
                    payload_len, true, ltnr, execute_callback);
 
     // Send the request
-    settup_observe_request(cud->smcp, &ltnr->request, &ltnr->transaction);
+    settup_observe_request(cud->nyoci, &ltnr->request, &ltnr->transaction);
 
     return 1;
 
@@ -121,7 +128,7 @@ static int coap_client_send_request(coap_code_t method, lua_State *L) {
     request_s req;
     create_request(&req, method, tt, url, ct, payload, payload_len, false, NULL, f);
 
-    if (send_request(cud->smcp, &req) != 0) {
+    if (send_request(cud->nyoci, &req) != 0) {
       luaL_error(L, "Error sending request");
     }
   }
@@ -132,7 +139,7 @@ static int coap_client_send_request(coap_code_t method, lua_State *L) {
 static int coap_client_gc(lua_State *L) {
   lcoap_client *cud = (lcoap_client *)luaL_checkudata(L, -1, CLIENT_MT_NAME);
   if (cud) {
-    free(cud->smcp);
+    free(cud->nyoci);
   }
   return 0;
 }

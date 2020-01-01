@@ -37,20 +37,26 @@ void register_listener_table(lua_State *L) {
   luaL_newmetatable(L, LISTENER_MT_NAME);
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
-  luaL_setfuncs(L, luacoap_listener_map, 0);
+
+  #if LUA_VERSION_NUM == 501
+  lua_setglobal(L, CLIENT_MT_NAME);                        // for Lua 5.1
+  luaL_register(L, CLIENT_MT_NAME, luacoap_listener_map);  // for Lua 5.1
+  #else
+  luaL_setfuncs(L, luacoap_listener_map, 0);               // for Lua 5.2 and above
+  #endif
 }
 
 /*****************************************************************************/
 
-lcoap_listener_t lua_create_listener(lua_State *L, smcp_t smcp, int func_ref) {
+lcoap_listener_t lua_create_listener(lua_State *L, nyoci_t nyoci, int func_ref) {
   lcoap_listener_t ltnr =
       (lcoap_listener_t)lua_newuserdata(L, sizeof(lcoap_listener));
   luaL_getmetatable(L, LISTENER_MT_NAME);
   lua_setmetatable(L, -2);
 
-  // Keep a reference to the smcp client
+  // Keep a reference to the nyoci client
   ltnr->L = L;
-  ltnr->smcp = smcp;
+  ltnr->nyoci = nyoci;
   ltnr->lua_func_ref = func_ref;
 
   return ltnr;
@@ -99,8 +105,9 @@ static void *thread_function(void *listener) {
     }
     pthread_mutex_unlock(&ltnr->suspend_mutex);
 
-    smcp_wait(ltnr->smcp, 1000);
-    smcp_process(ltnr->smcp);
+    nyoci_plat_wait(ltnr->nyoci, 1000);
+    nyoci_plat_process(ltnr->nyoci);
+
   } while (true);
 }
 
@@ -113,13 +120,13 @@ static int start_listening(lua_State *L) {
   ltnr->suspend = 0;
   ltnr->stop = 0;
 
-  smcp_status_t status;
-  status = smcp_transaction_begin(ltnr->smcp, &ltnr->transaction,
+  nyoci_status_t status;
+  status = nyoci_transaction_begin(ltnr->nyoci, &ltnr->transaction,
                                   30 * MSEC_PER_SEC);
 
   if (status) {
-    fprintf(stderr, "smcp_begin_transaction_old() returned %d(%s).\n",
-            status, smcp_status_to_cstr(status));
+    fprintf(stderr, "nyoci_begin_transaction_old() returned %d(%s).\n",
+            status, nyoci_status_to_cstr(status));
   }
 
   // Launch the thread
@@ -135,11 +142,11 @@ static int stop_listening(lua_State *L) {
   ltnr->stop = 1;
   pthread_mutex_unlock(&ltnr->suspend_mutex);
 
-  // Stop the smcp processing
+  // Stop the nyoci processing
   pthread_join(ltnr->thread, NULL);
 
   // Finish the transacition
-  smcp_transaction_end(ltnr->smcp, &ltnr->transaction);
+  nyoci_transaction_end(ltnr->nyoci, &ltnr->transaction);
 
   pthread_mutex_destroy(&ltnr->suspend_mutex);
   pthread_cond_destroy(&ltnr->cond_resume);
