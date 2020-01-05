@@ -1,4 +1,17 @@
 #include <luacoap/client.h>
+#include <openssl/ssl.h>
+#include <curl/urlapi.h>
+
+#ifndef MIN
+#if defined(__GCC_VERSION__)
+#define MIN(a, \
+		b) ({ __typeof__(a)_a = (a); __typeof__(b)_b = (b); _a < \
+			  _b ? _a : _b; })
+#else
+#define MIN(a,b)	((a)<(b)?(a):(b))	// NAUGHTY!...but compiles
+#endif
+#endif
+
 
 static bool observe;
 static int gRet;
@@ -8,6 +21,9 @@ static void signal_interrupt(int sig) {
   signal(SIGINT, previous_sigint_handler);
 }
 
+#define MAX_NYOCI_LEN 128
+char gClientPskIdentity[MAX_NYOCI_LEN] = {0};
+uint8_t gClientPsk[MAX_NYOCI_LEN] = {0};
 
 static nyoci_status_t resend_get_request(void* context);
 static nyoci_status_t get_response_handler(int statuscode, void* context);
@@ -32,7 +48,107 @@ request_t create_request(request_t request, coap_code_t method, int get_tt,
   return request;
 }
 
-int send_request(nyoci_t nyoci, request_t request) {
+static unsigned int nyocictl_plat_tls_client_psk_cb(
+  void* context,
+  const char *hint,
+  char *identity, unsigned int max_identity_len,
+  unsigned char *psk, unsigned int max_psk_len
+)
+{
+  strncpy(identity, gClientPskIdentity, MIN(max_identity_len, strlen(gClientPskIdentity)));
+
+  max_psk_len = MIN(max_psk_len, strlen(gClientPsk));
+  memcpy(psk, gClientPsk, max_psk_len);
+
+  return max_psk_len;
+}
+
+void check_coaps(nyoci_t nyoci, request_t request)
+{
+  CURLU *c_h = curl_url();
+  if (c_h)
+  {
+    CURLUcode res = curl_url_set(c_h, CURLUPART_URL, request->url, CURLU_NON_SUPPORT_SCHEME);
+    if (CURLUE_OK == res)
+    {
+      char *scheme;
+      if (CURLUE_OK == curl_url_get(c_h, CURLUPART_SCHEME, &scheme, 0))
+      {
+        if (strncmp(scheme, COAP_URI_SCHEME_COAPS, 5) == 0)
+        {
+          curl_free(scheme);
+          
+          if (nyoci_plat_tls_set_context(nyoci, NYOCI_PLAT_TLS_DEFAULT_CONTEXT) == NYOCI_STATUS_OK)
+          {
+            char* port;
+            if (CURLUE_OK == curl_url_get(c_h, CURLUPART_PORT, &port, 0))
+            {
+              if (nyoci_plat_bind_to_port(nyoci, NYOCI_SESSION_TYPE_DTLS, strtol(port, NULL, 0)) != NYOCI_STATUS_OK)
+              {
+                if (nyoci_plat_bind_to_port(nyoci, NYOCI_SESSION_TYPE_DTLS, 0) != NYOCI_STATUS_OK)
+                {
+                  printf("ERROR: Unable to bind to ssl port! \"%s\" (%d)\n", strerror(errno), errno);
+                }
+              }
+
+              curl_free(port);
+            }
+          }
+          else
+          {
+            printf("ERROR: Unable to set ssl context!\n");
+          }
+
+          char *user;
+          if (CURLUE_OK == curl_url_get(c_h, CURLUPART_USER, &user, 0))
+          {
+            strncpy(gClientPskIdentity, user, MIN(strlen(user), MAX_NYOCI_LEN));
+            curl_free(user);
+
+            // Clear user-part
+            curl_url_set(c_h, CURLUPART_USER, NULL, 0);
+          }
+
+          char *pass;
+          if (CURLUE_OK == curl_url_get(c_h, CURLUPART_PASSWORD, &pass, 0))
+          {
+            strncpy(gClientPsk, pass, MIN(strlen(pass), MAX_NYOCI_LEN));
+            curl_free(pass);
+
+            // Clear pass-part
+            curl_url_set(c_h, CURLUPART_PASSWORD, NULL, 0);
+          }
+
+          /*
+          char *url_no_creds;
+          if (CURLUE_OK == curl_url_get(c_h, CURLUPART_URL, &url_no_creds, 0))
+          {
+            // TODO: Replace coap URL with variant without credentials?
+            curl_free(url_no_creds);
+          }*/
+        }
+
+        if (gClientPskIdentity[0] != 0 || gClientPsk[0] != 0)
+        {
+          nyoci_plat_tls_set_client_psk_callback(nyoci, &nyocictl_plat_tls_client_psk_cb, NULL);
+        }
+      }
+    }
+    else
+    {
+      printf("Failed to parse url (%d): %s\n", res, request->url);
+    }
+    
+    curl_url_cleanup(c_h);
+  }
+  else
+  {
+    printf("Unable to create CURL object.\n");
+  }
+}
+
+int send_request(nyoci_t nyoci, request_t request)
+{
   gRet = ERRORCODE_INPROGRESS;
   observe = false;
 
@@ -47,6 +163,8 @@ int send_request(nyoci_t nyoci, request_t request) {
                         (void*)&get_response_handler, request);
 
   status = nyoci_transaction_begin(nyoci, &transaction, 30 * MSEC_PER_SEC);
+
+  check_coaps(nyoci, request);
 
   if (status) {
     fprintf(stderr, "nyoci_begin_transaction_old() returned %d(%s).\n", status,
@@ -101,10 +219,12 @@ static nyoci_status_t resend_get_request(void* context) {
 
   status = nyoci_outbound_send();
 
-  if (status) {
+  if (status && status != NYOCI_STATUS_WAIT_FOR_DNS && status != NYOCI_STATUS_WAIT_FOR_SESSION)
+  {
     fprintf(stderr, "nyoci_outbound_send() returned error %d(%s).\n", status,
             nyoci_status_to_cstr(status));
   }
+
 bail:
   return status;
 }

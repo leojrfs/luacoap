@@ -53,6 +53,8 @@ end
 client:get(coap.CON, "coap://coap.me/test", callback)
 ```
 
+The library also supports DTLS. Use the scheme ```çoaps``` and the identity and psk in the url, e.g. ```coaps://identity:psk@server/path```.
+
 The current available functions are
 
 ```lua

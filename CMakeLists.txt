@@ -31,21 +31,31 @@ include_directories (${LUA_INCLUDE_DIR})
 
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
-
+find_package(CURL REQUIRED)
 
 ## Source files
 aux_source_directory (src src_files)
 
 include_directories (include)
+include_directories (${CURL_INCLUDE_DIRS})
+
 add_library (coap SHARED ${src_files})
-set_target_properties (coap PROPERTIES PREFIX "")
-set_target_properties (coap PROPERTIES CMAKE_POSITION_INDEPENDENT_CODE True)
-
+set_target_properties (coap PROPERTIES PREFIX ""
+                                       POSITION_INDEPENDENT_CODE True)
 set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
-target_link_libraries (coap ${libnyoci} ${OPENSSL_SSL_LIBRARY} ${LUA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-add_dependencies (coap nyoci)
+target_link_libraries (coap
+  ${libnyoci}
+  ${OPENSSL_SSL_LIBRARY}
+  ${CURL_LIBRARIES}
+  ${LUA_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT})
 
-install (FILES ${CMAKE_BINARY_DIR}/coap.so DESTINATION lib/lua/${LUA_VERSION})
+add_dependencies (coap 
+  nyoci)
+
+install (FILES 
+  ${CMAKE_BINARY_DIR}/coap.so 
+  DESTINATION lib/lua/${LUA_VERSION})
 
 set (CPACK_GENERATOR "DEB")
 set (CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME})
