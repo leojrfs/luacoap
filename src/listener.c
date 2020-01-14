@@ -125,6 +125,8 @@ static int start_listening(lua_State *L) {
   status = nyoci_transaction_begin(ltnr->nyoci, &ltnr->transaction,
                                   30 * MSEC_PER_SEC);
 
+  check_coaps(ltnr->nyoci, ltnr->request.url);
+  
   if (status) {
     fprintf(stderr, "nyoci_begin_transaction_old() returned %d(%s).\n",
             status, nyoci_status_to_cstr(status));

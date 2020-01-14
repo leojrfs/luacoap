@@ -52,4 +52,6 @@ int send_request(nyoci_t nyoci, request_t req);
 
 int setup_observe_request(nyoci_t nyoci, request_t request, nyoci_transaction_t t);
 
+void check_coaps(nyoci_t nyoci, const char *url);
+
 #endif /* COAP_CLIENT_HH__ */

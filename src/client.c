@@ -63,12 +63,12 @@ static unsigned int nyocictl_plat_tls_client_psk_cb(
   return max_psk_len;
 }
 
-void check_coaps(nyoci_t nyoci, request_t request)
+void check_coaps(nyoci_t nyoci, const char *url)
 {
   CURLU *c_h = curl_url();
   if (c_h)
   {
-    CURLUcode res = curl_url_set(c_h, CURLUPART_URL, request->url, CURLU_NON_SUPPORT_SCHEME);
+    CURLUcode res = curl_url_set(c_h, CURLUPART_URL, url, CURLU_NON_SUPPORT_SCHEME);
     if (CURLUE_OK == res)
     {
       char *scheme;
@@ -136,7 +136,7 @@ void check_coaps(nyoci_t nyoci, request_t request)
     }
     else
     {
-      printf("Failed to parse url (%d): %s\n", res, request->url);
+      printf("Failed to parse url (%d): %s\n", res, url);
     }
     
     curl_url_cleanup(c_h);
@@ -164,7 +164,7 @@ int send_request(nyoci_t nyoci, request_t request)
 
   status = nyoci_transaction_begin(nyoci, &transaction, 30 * MSEC_PER_SEC);
 
-  check_coaps(nyoci, request);
+  check_coaps(nyoci, request->url);
 
   if (status) {
     fprintf(stderr, "nyoci_begin_transaction_old() returned %d(%s).\n", status,
