@@ -31,7 +31,8 @@ static const struct luaL_Reg luacoap_listener_map[] = {
     {"continue", continue_listening},
     {"stop", stop_listening},
     {"__gc", coap_listener_gc},
-    {NULL, NULL}};
+    {NULL, NULL}
+};
 
 void register_listener_table(lua_State *L) {
   luaL_newmetatable(L, LISTENER_MT_NAME);
@@ -39,10 +40,10 @@ void register_listener_table(lua_State *L) {
   lua_setfield(L, -2, "__index");
 
   #if LUA_VERSION_NUM == 501
-  lua_setglobal(L, CLIENT_MT_NAME);                        // for Lua 5.1
-  luaL_register(L, CLIENT_MT_NAME, luacoap_listener_map);  // for Lua 5.1
+  lua_setglobal(L, LISTENER_MT_NAME);                        // for Lua 5.1
+  luaL_register(L, LISTENER_MT_NAME, luacoap_listener_map);  // for Lua 5.1
   #else
-  luaL_setfuncs(L, luacoap_listener_map, 0);               // for Lua 5.2 and above
+  luaL_setfuncs(L, luacoap_listener_map, 0);                 // for Lua 5.2 and above
   #endif
 }
 

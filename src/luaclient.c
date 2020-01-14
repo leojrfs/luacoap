@@ -30,9 +30,13 @@ static int coap_client_observe(lua_State *L) {
 static int coap_client_gc(lua_State *L);
 
 static const struct luaL_Reg luacoap_client_map[] = {
-    {"get", coap_client_get},   {"put", coap_client_put},
-    {"post", coap_client_post}, {"observe", coap_client_observe},
-    {"__gc", coap_client_gc},   {NULL, NULL}};
+    {"get", coap_client_get},   
+    {"put", coap_client_put},
+    {"post", coap_client_post},
+    {"observe", coap_client_observe},
+    {"__gc", coap_client_gc},
+    {NULL, NULL}
+};
 
 void register_client_table(lua_State *L) {
   luaL_newmetatable(L, CLIENT_MT_NAME);
@@ -113,7 +117,7 @@ static int coap_client_send_request(coap_code_t method, lua_State *L) {
                    payload_len, true, ltnr, execute_callback);
 
     // Send the request
-    settup_observe_request(cud->nyoci, &ltnr->request, &ltnr->transaction);
+    setup_observe_request(cud->nyoci, &ltnr->request, &ltnr->transaction);
 
     return 1;
 

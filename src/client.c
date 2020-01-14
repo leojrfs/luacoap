@@ -182,7 +182,7 @@ int send_request(nyoci_t nyoci, request_t request)
   return gRet;
 }
 
-int settup_observe_request(nyoci_t nyoci, request_t request,
+int setup_observe_request(nyoci_t nyoci, request_t request,
                            nyoci_transaction_t t) {
   gRet = ERRORCODE_INPROGRESS;
   observe = true;

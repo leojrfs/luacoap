@@ -50,6 +50,6 @@ request_t create_request(request_t request, coap_code_t method, int get_tt, cons
 
 int send_request(nyoci_t nyoci, request_t req);
 
-int settup_observe_request(nyoci_t nyoci, request_t request, nyoci_transaction_t t);
+int setup_observe_request(nyoci_t nyoci, request_t request, nyoci_transaction_t t);
 
 #endif /* COAP_CLIENT_HH__ */
