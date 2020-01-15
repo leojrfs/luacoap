@@ -63,7 +63,12 @@ static unsigned int nyocictl_plat_tls_client_psk_cb(
   return max_psk_len;
 }
 
-void check_coaps(nyoci_t nyoci, const char *url)
+int is_coap_dtls(const char *url)
+{
+  return !strncmp(url, COAP_URI_SCHEME_COAPS, strlen(COAP_URI_SCHEME_COAPS));
+}
+
+void setup_coap_dtls(nyoci_t nyoci, const char *url)
 {
   CURLU *c_h = curl_url();
   if (c_h)
@@ -164,7 +169,10 @@ int send_request(nyoci_t nyoci, request_t request)
 
   status = nyoci_transaction_begin(nyoci, &transaction, 30 * MSEC_PER_SEC);
 
-  check_coaps(nyoci, request->url);
+  if (is_coap_dtls(request->url))
+  {
+    setup_coap_dtls(nyoci, request->url);
+  }
 
   if (status) {
     fprintf(stderr, "nyoci_begin_transaction_old() returned %d(%s).\n", status,
