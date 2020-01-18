@@ -195,7 +195,7 @@ int setup_observe_request(nyoci_t nyoci, request_t request,
   gRet = ERRORCODE_INPROGRESS;
   observe = true;
 
-  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE | NYOCI_TRANSACTION_OBSERVE;
+  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE | NYOCI_TRANSACTION_OBSERVE | NYOCI_TRANSACTION_KEEPALIVE;
 
   nyoci_transaction_end(nyoci, t);
   nyoci_transaction_init(t, flags, (void*)&resend_get_request,
