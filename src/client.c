@@ -1,6 +1,6 @@
 #include <luacoap/client.h>
 #include <openssl/ssl.h>
-#include <curl/urlapi.h>
+#include <libnyoci/url-helpers.h>
 
 #ifndef MIN
 #if defined(__GCC_VERSION__)
@@ -70,85 +70,61 @@ int is_coap_dtls(const char *url)
 
 void setup_coap_dtls(nyoci_t nyoci, const char *url)
 {
-  CURLU *c_h = curl_url();
-  if (c_h)
+  char* url_parsed = strdup(url);
+  struct url_components_s components = {0};
+  
+  if (url_parsed)
   {
-    CURLUcode res = curl_url_set(c_h, CURLUPART_URL, url, CURLU_NON_SUPPORT_SCHEME);
-    if (CURLUE_OK == res)
-    {
-      char *scheme;
-      if (CURLUE_OK == curl_url_get(c_h, CURLUPART_SCHEME, &scheme, 0))
-      {
-        if (strncmp(scheme, COAP_URI_SCHEME_COAPS, 5) == 0)
-        {
-          curl_free(scheme);
-          
-          if (nyoci_plat_tls_set_context(nyoci, NYOCI_PLAT_TLS_DEFAULT_CONTEXT) == NYOCI_STATUS_OK)
-          {
-            char* port;
-            if (CURLUE_OK == curl_url_get(c_h, CURLUPART_PORT, &port, 0))
-            {
-              if (nyoci_plat_bind_to_port(nyoci, NYOCI_SESSION_TYPE_DTLS, strtol(port, NULL, 0)) != NYOCI_STATUS_OK)
-              {
-                if (nyoci_plat_bind_to_port(nyoci, NYOCI_SESSION_TYPE_DTLS, 0) != NYOCI_STATUS_OK)
-                {
-                  printf("ERROR: Unable to bind to ssl port! \"%s\" (%d)\n", strerror(errno), errno);
-                }
-              }
+    url_parse(url_parsed, &components);
 
-              curl_free(port);
+    if (components.host)
+    {
+      if (strncmp(components.protocol, COAP_URI_SCHEME_COAPS, 5) == 0)
+      {       
+        if (nyoci_plat_tls_set_context(nyoci, NYOCI_PLAT_TLS_DEFAULT_CONTEXT) == NYOCI_STATUS_OK)
+        {
+          if (components.port)
+          {
+            if (nyoci_plat_bind_to_port(nyoci, NYOCI_SESSION_TYPE_DTLS, strtol(components.port, NULL, 0)) != NYOCI_STATUS_OK)
+            {
+              if (nyoci_plat_bind_to_port(nyoci, NYOCI_SESSION_TYPE_DTLS, 0) != NYOCI_STATUS_OK)
+              {
+                printf("ERROR: Unable to bind to ssl port! \"%s\" (%d)\n", strerror(errno), errno);
+              }
             }
           }
-          else
-          {
-            printf("ERROR: Unable to set ssl context!\n");
-          }
-
-          char *user;
-          if (CURLUE_OK == curl_url_get(c_h, CURLUPART_USER, &user, 0))
-          {
-            strncpy(gClientPskIdentity, user, MIN(strlen(user), MAX_NYOCI_LEN));
-            curl_free(user);
-
-            // Clear user-part
-            curl_url_set(c_h, CURLUPART_USER, NULL, 0);
-          }
-
-          char *pass;
-          if (CURLUE_OK == curl_url_get(c_h, CURLUPART_PASSWORD, &pass, 0))
-          {
-            strncpy(gClientPsk, pass, MIN(strlen(pass), MAX_NYOCI_LEN));
-            curl_free(pass);
-
-            // Clear pass-part
-            curl_url_set(c_h, CURLUPART_PASSWORD, NULL, 0);
-          }
-
-          /*
-          char *url_no_creds;
-          if (CURLUE_OK == curl_url_get(c_h, CURLUPART_URL, &url_no_creds, 0))
-          {
-            // TODO: Replace coap URL with variant without credentials?
-            curl_free(url_no_creds);
-          }*/
+        }
+        else
+        {
+          printf("ERROR: Unable to set ssl context!\n");
         }
 
+        if (components.username)
+        {
+          strncpy(gClientPskIdentity, components.username, MIN(strlen(components.username), MAX_NYOCI_LEN));
+        }
+
+        if (components.password)
+        {
+          strncpy(gClientPsk, components.password, MIN(strlen(components.password), MAX_NYOCI_LEN));
+        }
+        
         if (gClientPskIdentity[0] != 0 || gClientPsk[0] != 0)
         {
           nyoci_plat_tls_set_client_psk_callback(nyoci, &nyocictl_plat_tls_client_psk_cb, NULL);
-        }
+        } 
       }
     }
     else
     {
-      printf("Failed to parse url (%d): %s\n", res, url);
+      printf("Url parsing failed, or the url does not contain a host. It's invalid either way.\n");
     }
-    
-    curl_url_cleanup(c_h);
+
+    free(url_parsed);
   }
   else
   {
-    printf("Unable to create CURL object.\n");
+    printf("Unable to create temporary url object.\n");
   }
 }
 
@@ -195,7 +171,7 @@ int setup_observe_request(nyoci_t nyoci, request_t request,
   gRet = ERRORCODE_INPROGRESS;
   observe = true;
 
-  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE | NYOCI_TRANSACTION_OBSERVE | NYOCI_TRANSACTION_KEEPALIVE;
+  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE | NYOCI_TRANSACTION_OBSERVE | NYOCI_TRANSACTION_KEEPALIVE | NYOCI_TRANSACTION_NO_AUTO_END;
 
   nyoci_transaction_end(nyoci, t);
   nyoci_transaction_init(t, flags, (void*)&resend_get_request,

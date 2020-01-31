@@ -31,7 +31,6 @@ include_directories (${LUA_INCLUDE_DIR})
 
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(CURL REQUIRED)
 
 ## Source files
 aux_source_directory (src src_files)
@@ -46,7 +45,6 @@ set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
 target_link_libraries (coap
   ${libnyoci}
   ${OPENSSL_SSL_LIBRARY}
-  ${CURL_LIBRARIES}
   ${LUA_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT})
 
@@ -61,7 +59,7 @@ set(CPACK_GENERATOR "DEB")
 set(CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME}-lua${LUA_VERSION})
 set(CPACK_SET_DESTDIR TRUE)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Vwout")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libssl1.1, libcurl4")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libssl1.1")
 set(CPACK_PACKAGE_VERSION_MAJOR ${luacoap_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${luacoap_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${luacoap_VERSION_PATCH})
