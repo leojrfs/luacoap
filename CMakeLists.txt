@@ -10,16 +10,23 @@ set (luacoap_VERSION_MAJOR 0)
 set (luacoap_VERSION_MINOR 2)
 set (luacoap_VERSION_PATCH 0)
 
+# Apply nyoci patch on Alpine 3.11
+if (NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 9.2)
+  set(PATCH_COMMAND_NYOCI patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/patches/nyoci-001-Makefile-autoconf-archive.patch)
+endif()
+
 ExternalProject_Add(nyoci
   GIT_REPOSITORY https://github.com/darconeous/libnyoci
   GIT_TAG 11a6e1b107cb1577cb0fffca7e3fd261f26da94a
   SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/nyoci
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
   CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/nyoci/bootstrap.sh &&
-  ${CMAKE_CURRENT_BINARY_DIR}/nyoci/configure --enable-tls --disable-nyocictl --prefix=<INSTALL_DIR>
+                    ${CMAKE_CURRENT_BINARY_DIR}/nyoci/configure --enable-tls --disable-nyocictl --disable-extra --disable-plugtest --disable-examples --prefix=<INSTALL_DIR>
   BUILD_COMMAND ${MAKE}
   UPDATE_COMMAND ""
+  PATCH_COMMAND ${PATCH_COMMAND_NYOCI}
 )
+
 ExternalProject_Get_Property(nyoci install_dir)
 set (libnyoci ${install_dir}/lib/libnyoci.a)
 include_directories (${install_dir}/include)

@@ -1,0 +1,129 @@
+--- libnyoci-orig/Makefile.am
++++ libnyoci/Makefile.am
+@@ -27,4 +27,4 @@
+ 
+ distdir = $(PACKAGE)-$(VERSION)$(EXTRA_VERSION)
+ 
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+--- libnyoci-orig/src/Makefile.am
++++ libnyoci/src/Makefile.am
+@@ -30,9 +30,10 @@
+ 
+ SUBDIRS += tests
+ 
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ AM_LIBS = $(CODE_COVERAGE_LDFLAGS)
+ AM_CFLAGS = $(CODE_COVERAGE_CFLAGS)
++AM_CFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src -I$(top_srcdir)/src/libnyoci -I$(top_srcdir)/src/plat-net/$(NYOCI_PLAT_NET) -I$(top_srcdir)/src/plat-tls/$(NYOCI_PLAT_TLS)
+ 
+ EXTRA_DIST += version.c.in version.h
+ CLEANFILES = $(top_builddir)/$(subdir)/version.c
+--- libnyoci-orig/src/examples/Makefile.am
++++ libnyoci/src/examples/Makefile.am
+@@ -1,4 +1,4 @@
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ AM_LIBS = $(CODE_COVERAGE_LDFLAGS)
+ AM_CFLAGS = $(CFLAGS) $(CODE_COVERAGE_CFLAGS)
+--- libnyoci-orig/src/libnyoci/Makefile.am
++++ libnyoci/src/libnyoci/Makefile.am
+@@ -1,12 +1,14 @@
+ 
+ AUTOMAKE_OPTIONS = subdir-objects
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ lib_LTLIBRARIES = libnyoci.la
+ 
+ AM_LIBS = $(CODE_COVERAGE_LDFLAGS)
+ AM_CFLAGS = $(CFLAGS) $(CODE_COVERAGE_CFLAGS)
++AM_CFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src -I$(top_srcdir)/src/libnyoci -I$(top_srcdir)/src/plat-net/$(NYOCI_PLAT_NET) -I$(top_srcdir)/src/plat-tls/$(NYOCI_PLAT_TLS)
+ AM_CPPFLAGS = $(CPPFLAGS) $(NYOCI_CPPFLAGS)
++AM_CPPFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src -I$(top_srcdir)/src/libnyoci -I$(top_srcdir)/src/plat-net/$(NYOCI_PLAT_NET) -I$(top_srcdir)/src/plat-tls/$(NYOCI_PLAT_TLS)
+ 
+ pkgconfigdir = ${prefix}/lib/pkgconfig
+ pkgconfig_DATA = libnyoci.pc
+--- libnyoci-orig/src/libnyociextra/Makefile.am
++++ libnyoci/src/libnyociextra/Makefile.am
+@@ -4,7 +4,7 @@
+ 
+ lib_LTLIBRARIES = libnyociextra.la
+ 
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ pkgconfigdir = ${prefix}/lib/pkgconfig
+ pkgconfig_DATA = libnyociextra.pc
+--- libnyoci-orig/src/nyocictl/Makefile.am
++++ libnyoci/src/nyocictl/Makefile.am
+@@ -1,4 +1,4 @@
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ AM_LIBS = $(CODE_COVERAGE_LDFLAGS)
+ AM_CFLAGS = $(CODE_COVERAGE_CFLAGS)
+--- libnyoci-orig/src/plat-net/posix/Makefile.am
++++ libnyoci/src/plat-net/posix/Makefile.am
+@@ -2,9 +2,12 @@
+ AUTOMAKE_OPTIONS = subdir-objects
+ DISTCLEANFILES = .deps Makefile
+ 
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ noinst_LTLIBRARIES = libnyoci-plat-net.la
++
++AM_CFLAGS = -I$(top_builddir)/src -I$(top_srcdir)/src -I$(top_srcdir)/src/libnyoci -I$(top_srcdir)/src/plat-tls/$(NYOCI_PLAT_TLS)
++AM_CPPFLAGS = -I$(top_builddir)/src -I$(top_srcdir)/src -I$(top_srcdir)/src/libnyoci -I$(top_srcdir)/src/plat-tls/$(NYOCI_PLAT_TLS)
+ 
+ libnyoci_plat_net_la_CFLAGS = $(AM_CFLAGS) $(CODE_COVERAGE_CFLAGS) $(HIDDEN_VISIBILITY_CFLAGS)
+ libnyoci_plat_net_la_CPPFLAGS = $(AM_CPPFLAGS) $(NYOCI_CPPFLAGS) $(OPENSSL_INCLUDES)
+--- libnyoci-orig/src/plat-net/uip/Makefile.am
++++ libnyoci/src/plat-net/uip/Makefile.am
+@@ -3,7 +3,7 @@
+ DISTCLEANFILES = .deps Makefile
+ AM_CPPFLAGS = $(CPPFLAGS) $(NYOCI_CPPFLAGS)
+ 
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ noinst_LTLIBRARIES = libnyoci-plat-net.la
+ 
+--- libnyoci-orig/src/plat-tls/openssl/Makefile.am
++++ libnyoci/src/plat-tls/openssl/Makefile.am
+@@ -2,9 +2,12 @@
+ AUTOMAKE_OPTIONS = subdir-objects
+ DISTCLEANFILES = .deps Makefile
+ 
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ noinst_LTLIBRARIES = libnyoci-plat-tls.la
++
++AM_CFLAGS = -I$(top_builddir)/src -I$(top_srcdir)/src -I$(top_srcdir)/src/libnyoci -I$(top_srcdir)/src/plat-net/$(NYOCI_PLAT_NET)
++AM_CPPFLAGS = -I$(top_builddir)/src -I$(top_srcdir)/src -I$(top_srcdir)/src/libnyoci -I$(top_srcdir)/src/plat-net/$(NYOCI_PLAT_NET)
+ 
+ libnyoci_plat_tls_la_CFLAGS = $(AM_CFLAGS) $(CODE_COVERAGE_CFLAGS) $(HIDDEN_VISIBILITY_CFLAGS)
+ libnyoci_plat_tls_la_CPPFLAGS = $(AM_CPPFLAGS) $(NYOCI_CPPFLAGS) $(OPENSSL_INCLUDES)
+--- libnyoci-orig/src/plugtest/Makefile.am
++++ libnyoci/src/plugtest/Makefile.am
+@@ -1,4 +1,4 @@
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ AM_LIBS = $(CODE_COVERAGE_LDFLAGS)
+ AM_CFLAGS = $(CFLAGS) $(CODE_COVERAGE_CFLAGS)
+--- libnyoci-orig/src/tests/Makefile.am
++++ libnyoci/src/tests/Makefile.am
+@@ -2,7 +2,7 @@
+ 
+ check_PROGRAMS =
+ 
+-@CODE_COVERAGE_RULES@
++include $(top_srcdir)/aminclude_static.am
+ 
+ AM_LIBS = $(CODE_COVERAGE_LDFLAGS)
+ AM_CFLAGS = $(CODE_COVERAGE_CFLAGS)
