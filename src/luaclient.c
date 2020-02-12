@@ -59,6 +59,14 @@ static void *execute_callback(void *l, const char *p, size_t n) {
   execute_listener_callback_with_payload(ltnr, p, n);
 }
 
+static void *client_callback(void *c, const char *p, size_t n) {
+  lcoap_client *cud = (lcoap_client*)c;
+
+  lua_rawgeti(cud->L, LUA_REGISTRYINDEX, cud->lua_func_ref);
+  lua_pushlstring(cud->L, p, n);
+  lua_pcall(cud->L, 1, 0, 0);
+}
+
 
 static int coap_client_send_request(coap_code_t method, lua_State *L) {
   coap_transaction_type_t tt = COAP_TRANS_TYPE_CONFIRMABLE;
@@ -122,15 +130,11 @@ static int coap_client_send_request(coap_code_t method, lua_State *L) {
     return 1;
 
   } else {
-
-    void *f(void *d, const char *p, size_t n) {
-      lua_rawgeti(L, LUA_REGISTRYINDEX, func_ref);
-      lua_pushlstring(L, p, n);
-      lua_pcall(L, 1, 0, 0);
-    }
+    cud->lua_func_ref = func_ref;
+    cud->L = L;
 
     request_s req;
-    create_request(&req, method, tt, url, ct, payload, payload_len, false, NULL, f);
+    create_request(&req, method, tt, url, ct, payload, payload_len, false, cud, client_callback);
 
     if (send_request(cud->nyoci, &req) != 0) {
       luaL_error(L, "Error sending request");

@@ -13,7 +13,13 @@
 #define COAP_METHOD_OBSERVE 5
 
 // Just keeps the nyoci client
-typedef struct { nyoci_t nyoci; } lcoap_client;
+typedef struct { 
+  nyoci_t nyoci; 
+
+  // Callback 
+  int lua_func_ref;
+  lua_State* L; 
+} lcoap_client;
 
 /**
  *  Register the CoAP client table.

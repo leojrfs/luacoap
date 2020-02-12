@@ -271,8 +271,10 @@ static nyoci_status_t get_response_handler(int statuscode, void* context) {
     if (context) {
       request_t req = (request_t)context;
 
-      if (req->callback) {
+      if (req && req->callback && req->data) {
         req->callback(req->data, content, content_length);
+      } else {
+        fprintf(stderr, "INTERNAL ERROR: callback not set or data missing\n");
       }
     }
   }
