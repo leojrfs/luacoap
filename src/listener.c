@@ -123,7 +123,7 @@ static int start_listening(lua_State *L) {
 
   nyoci_status_t status;
   status = nyoci_transaction_begin(ltnr->nyoci, &ltnr->transaction,
-                                  30 * MSEC_PER_SEC);
+                                   180 * MSEC_PER_SEC);
 
   if (is_coap_dtls(ltnr->request.url))
   {
