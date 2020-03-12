@@ -37,9 +37,16 @@ request_t create_request(request_t request, coap_code_t method, int get_tt,
   request->outbound_code = method;
   request->outbound_tt = get_tt;
   request->expected_code = COAP_RESULT_205_CONTENT;
-  request->url = url;
-  request->content = payload;
-  request->content_len = payload_length;
+
+  if (url) {
+    request->url = (char*)malloc(strlen(url)+1);
+    memcpy(request->url, url, strlen(url)+1);
+  }
+  if (payload_length > 0) {
+    request->content = (char*)malloc(payload_length);
+    memcpy(request->content, payload, payload_length);
+    request->content_len = payload_length;
+  }
   request->ct = ct;
   request->timeout = obs ? CMS_DISTANT_FUTURE : 30 * MSEC_PER_SEC;
   request->data = data;

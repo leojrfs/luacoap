@@ -65,6 +65,19 @@ lcoap_listener_t lua_create_listener(lua_State *L, nyoci_t nyoci, int func_ref) 
 
 static int coap_listener_gc(lua_State *L) {
   stop_listening(L);
+
+  lcoap_listener_t ltnr =
+      (lcoap_listener_t)luaL_checkudata(L, -1, LISTENER_MT_NAME);
+  if (ltnr) {
+      if (ltnr->request.url) {
+        free(ltnr->request.url);
+        ltnr->request.url = 0;
+      }
+      if (ltnr->request.content) {
+        free(ltnr->request.content);
+        ltnr->request.content = 0;
+      }
+  }
   return 0;
 }
 
