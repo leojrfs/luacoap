@@ -27,9 +27,9 @@
  *  Request Context Structure.
  */
 typedef struct {
-  const char *url;                        /**< CoAP resource URL */
-  const char *content;                    /**< Playload */
-  coap_size_t content_len;                /**< Playload length */
+  char *url;                              /**< CoAP resource URL */
+  char *content;                          /**< Payload */
+  coap_size_t content_len;                /**< Payload length */
   coap_content_type_t ct;                 /**< Content type */
   nyoci_cms_t timeout;                    /**< Request timeout */
 
