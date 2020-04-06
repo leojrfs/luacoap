@@ -52,6 +52,7 @@ void register_listener_table(lua_State *L) {
 lcoap_listener_t lua_create_listener(lua_State *L, nyoci_t nyoci, int func_ref) {
   lcoap_listener_t ltnr =
       (lcoap_listener_t)lua_newuserdata(L, sizeof(lcoap_listener));
+      
   luaL_getmetatable(L, LISTENER_MT_NAME);
   lua_setmetatable(L, -2);
 
@@ -68,7 +69,12 @@ static int coap_listener_gc(lua_State *L) {
 
   lcoap_listener_t ltnr =
       (lcoap_listener_t)luaL_checkudata(L, -1, LISTENER_MT_NAME);
+  
   if (ltnr) {
+      if (ltnr->nyoci) {
+        free(ltnr->nyoci);
+        ltnr->nyoci = 0;
+      }
       if (ltnr->request.url) {
         free(ltnr->request.url);
         ltnr->request.url = 0;
@@ -109,20 +115,34 @@ static int method_callback(lua_State *L) {
 
 static void *thread_function(void *listener) {
   lcoap_listener_t ltnr = (lcoap_listener_t)listener;
+  int stop = false;
 
   do {
     pthread_mutex_lock(&ltnr->suspend_mutex);
     if (ltnr->suspend != 0) {
       pthread_cond_wait(&ltnr->cond_resume, &ltnr->suspend_mutex);
     } else if (ltnr->stop != 0) {
-      break;
+      stop = true;
     }
     pthread_mutex_unlock(&ltnr->suspend_mutex);
 
-    nyoci_plat_wait(ltnr->nyoci, 1000);
-    nyoci_plat_process(ltnr->nyoci);
+    if (!stop)
+    {
+      if (ltnr->nyoci) {
+        nyoci_plat_wait(ltnr->nyoci, 1000);
+      }
+      
+      if (ltnr->nyoci) {
+        nyoci_plat_process(ltnr->nyoci);
+      }
+      
+      if (!ltnr->nyoci) {
+        fprintf(stderr, "listener nyoci pointer invalid\n");
+        stop = true;
+      }
+    }
 
-  } while (true);
+  } while (!stop);
 }
 
 static int start_listening(lua_State *L) {

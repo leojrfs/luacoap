@@ -3,6 +3,7 @@
 static int coap_create_client(lua_State *L) {
   lcoap_client *cud;
   cud = (lcoap_client *)lua_newuserdata(L, sizeof(lcoap_client));
+  
   luaL_getmetatable(L, CLIENT_MT_NAME);
   lua_setmetatable(L, -2);
 

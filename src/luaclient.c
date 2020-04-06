@@ -126,6 +126,9 @@ static int coap_client_send_request(coap_code_t method, lua_State *L) {
 
     // Send the request
     setup_observe_request(cud->nyoci, &ltnr->request, &ltnr->transaction);
+    
+    // nyoci pointer is managed by the listener now
+    cud->nyoci = 0;
 
     return 1;
 
@@ -147,7 +150,10 @@ static int coap_client_send_request(coap_code_t method, lua_State *L) {
 static int coap_client_gc(lua_State *L) {
   lcoap_client *cud = (lcoap_client *)luaL_checkudata(L, -1, CLIENT_MT_NAME);
   if (cud) {
-    free(cud->nyoci);
+    if (cud->nyoci) {
+      free(cud->nyoci);
+      cud->nyoci = 0;
+    }
   }
   return 0;
 }

@@ -149,9 +149,10 @@ int send_request(nyoci_t nyoci, request_t request)
   struct nyoci_transaction_s transaction;
   previous_sigint_handler = signal(SIGINT, &signal_interrupt);
 
-  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE;
-
+  transaction.active = 0;
   nyoci_transaction_end(nyoci, &transaction);
+
+  int flags = NYOCI_TRANSACTION_ALWAYS_INVALIDATE;
   nyoci_transaction_init(&transaction, flags, (void*)&resend_get_request,
                         (void*)&get_response_handler, request);
 
@@ -169,11 +170,19 @@ int send_request(nyoci_t nyoci, request_t request)
   }
 
   while (ERRORCODE_INPROGRESS == gRet) {
-    nyoci_plat_wait(nyoci, 1000);
-    nyoci_plat_process(nyoci);
+    if (nyoci) {
+      nyoci_plat_wait(nyoci, 1000);
+    }
+    if (nyoci) {
+      nyoci_plat_process(nyoci);
+    }
   }
 
-  nyoci_transaction_end(nyoci, &transaction);
+  if (nyoci) {
+    nyoci_transaction_end(nyoci, &transaction);
+  } else {
+    fprintf(stderr, "nyoci pointer invalid\n");
+  }
   signal(SIGINT, previous_sigint_handler);
   return gRet;
 }
