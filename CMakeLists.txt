@@ -8,12 +8,15 @@ message(STATUS "Build and install for Lua version ${LUA_VERSION}")
 
 set (luacoap_VERSION_MAJOR 0)
 set (luacoap_VERSION_MINOR 2)
-set (luacoap_VERSION_PATCH 0)
+set (luacoap_VERSION_PATCH 1)
 
 # Apply nyoci patch on Alpine 3.11
 if (NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 9.2)
   set(PATCH_COMMAND_NYOCI patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/patches/nyoci-001-Makefile-autoconf-archive.patch)
 endif()
+
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 
 ExternalProject_Add(nyoci
   GIT_REPOSITORY https://github.com/darconeous/libnyoci
