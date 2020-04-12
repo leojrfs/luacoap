@@ -6,8 +6,15 @@ implements some client calls.
 
 ### Building
 
-To build this project, you require to install cmake and lua
+To build this project, cmake and lua are required, plus a few development libraries:
+```bash
+export LUA_VERSION=$(lua -e 'print(string.sub(_VERSION, 5))')
 
+sudo apt update
+sudo apt install -y git cmake libtool autoconf-archive openssl libssl-dev lua${LUA_VERSION}-dev
+```
+
+To perform the actual build of luacoap, execute:
 ```bash
 git clone https://github.com/vwout/luacoap
 mkdir -p luacoap/build
@@ -15,25 +22,17 @@ cd luacoap/build
 cmake ..
 make
 ```
+the output is `coap.so`, a shared library that can be loaded into lua.
 
-the output its a `coap.so` shared library that can be loaded into lua.
-
-You can optionally install this module with:
-
+To use it in lua using `require("coap")` install this module with:
 ```bash
 sudo make install
 ```
-
 and you can use it independently of your location.
 
-Optionally, you can download and install the [debian 
+Alternatively, you can download and install the [debian 
 package](https://github.com/vwout/luacoap/raw/master/downloads/luacoap-0.2.0-Linux.deb).
 
-or `luarocks`
-
-```lua
-luarocks install luacoap
-```
 
 ### Usage
 
