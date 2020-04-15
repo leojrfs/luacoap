@@ -151,7 +151,7 @@ static int coap_client_gc(lua_State *L) {
   lcoap_client *cud = (lcoap_client *)luaL_checkudata(L, -1, CLIENT_MT_NAME);
   if (cud) {
     if (cud->nyoci) {
-      free(cud->nyoci);
+      nyoci_release(cud->nyoci);
       cud->nyoci = 0;
     }
   }

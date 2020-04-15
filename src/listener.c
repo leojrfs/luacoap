@@ -72,7 +72,7 @@ static int coap_listener_gc(lua_State *L) {
   
   if (ltnr) {
       if (ltnr->nyoci) {
-        free(ltnr->nyoci);
+        nyoci_release(ltnr->nyoci);
         ltnr->nyoci = 0;
       }
       if (ltnr->request.url) {
