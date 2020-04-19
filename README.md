@@ -30,8 +30,7 @@ sudo make install
 ```
 and you can use it independently of your location.
 
-Alternatively, you can download and install the [debian 
-package](https://github.com/vwout/luacoap/raw/master/downloads/luacoap-0.2.0-Linux.deb).
+Alternatively, you can download and install the [debian package](https://github.com/vwout/luacoap/releases/latest).
 
 
 ### Usage
