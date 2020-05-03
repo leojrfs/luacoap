@@ -19,8 +19,8 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 
 ExternalProject_Add(nyoci
-  GIT_REPOSITORY https://github.com/darconeous/libnyoci
-  GIT_TAG 11a6e1b107cb1577cb0fffca7e3fd261f26da94a
+  GIT_REPOSITORY https://github.com/vwout/libnyoci
+  GIT_TAG bae244bc7e836da9b35113c1254527455f80bf68
   SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/nyoci
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
   CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/nyoci/bootstrap.sh &&
