@@ -185,7 +185,9 @@ static int stop_listening(lua_State *L) {
   pthread_join(ltnr->thread, NULL);
 
   // Finish the transacition
-  nyoci_transaction_end(ltnr->nyoci, &ltnr->transaction);
+  if (ltnr->nyoci) {
+    nyoci_transaction_end(ltnr->nyoci, &ltnr->transaction);
+  }
 
   pthread_mutex_destroy(&ltnr->suspend_mutex);
   pthread_cond_destroy(&ltnr->cond_resume);

@@ -172,17 +172,18 @@ int send_request(nyoci_t nyoci, request_t request)
   while (ERRORCODE_INPROGRESS == gRet) {
     if (nyoci) {
       nyoci_plat_wait(nyoci, 1000);
-    }
-    if (nyoci) {
       nyoci_plat_process(nyoci);
     }
   }
 
   if (nyoci) {
-    nyoci_transaction_end(nyoci, &transaction);
+    if (transaction.active) {
+      nyoci_transaction_end(nyoci, &transaction);
+    }
   } else {
     fprintf(stderr, "nyoci pointer invalid\n");
   }
+
   signal(SIGINT, previous_sigint_handler);
   return gRet;
 }
