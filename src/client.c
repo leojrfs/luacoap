@@ -38,18 +38,24 @@ request_t create_request(request_t request, coap_code_t method, int get_tt,
   request->outbound_tt = get_tt;
   request->expected_code = COAP_RESULT_205_CONTENT;
 
-  if (url) {
-    request->url = (char*)malloc(strlen(url)+1);
-    if (request->url) {
-      memcpy(request->url, url, strlen(url)+1);
+  if (obs) {
+    if (url) {
+      request->url = (char*)malloc(strlen(url)+1);
+      if (request->url) {
+        memcpy(request->url, url, strlen(url)+1);
+      }
     }
-  }
-  if (payload && (payload_length > 0)) {
-    request->content = (char*)malloc(payload_length);
-    if (request->content) {
-      memcpy(request->content, payload, payload_length);
-      request->content_len = payload_length;
+    if (payload && (payload_length > 0)) {
+      request->content = (char*)malloc(payload_length);
+      if (request->content) {
+        memcpy(request->content, payload, payload_length);
+        request->content_len = payload_length;
+      }
     }
+  } else {
+    request->url = url;
+    request->content = payload;
+    request->content_len = payload_length;
   }
 
   request->ct = ct;
