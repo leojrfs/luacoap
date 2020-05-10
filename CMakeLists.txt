@@ -8,7 +8,7 @@ message(STATUS "Build and install for Lua version ${LUA_VERSION}")
 
 set (luacoap_VERSION_MAJOR 0)
 set (luacoap_VERSION_MINOR 2)
-set (luacoap_VERSION_PATCH 2)
+set (luacoap_VERSION_PATCH 3)
 
 # Apply nyoci patch on Alpine 3.11
 if (NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 9.2)
